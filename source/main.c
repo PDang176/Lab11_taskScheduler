@@ -19,8 +19,9 @@
 #endif
 
 //Shared Variables
-unsigned char output = '\0';
-unsigned char cursor = 1;
+unsigned char obstacle;
+unsigned char player = 1;
+unsigned char pause = 0;
 //End Shared Variables
 
 enum movement_States {};
@@ -38,6 +39,12 @@ int randomSpawnSMTick(int state){
 enum display_States {};
 
 int displaySMTick(int state){
+
+}
+
+enum pause_States {};
+
+int pauseSMTick(int state){
 
 }
 
@@ -77,6 +84,12 @@ int main(void) {
 	task3.period = 100;
 	task3.elapsedTime = task3.period;
 	task3.TickFct = &displaySMTick;
+
+	//Task 4 (pauseSM)
+	task4.state = start;
+	task4.period = 10;
+	task4.elapsedTime = task4.period;
+	task4.TickFct = &pauseSMTick;
 
 	unsigned short i; //for-loop iterator
 
