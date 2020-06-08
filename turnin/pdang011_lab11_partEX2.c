@@ -11,7 +11,6 @@
  */
 #include <avr/io.h>
 #include "io.h"
-#include "timer.h"
 #ifdef _SIMULATE_
 #include "simAVRHeader.h"
 #endif
@@ -21,25 +20,13 @@ int main(void) {
 	DDRA = 0xFF; PORTA = 0x00;
 	DDRD = 0xFF; PORTD = 0x00;
 
-	TimerSet(300);
-	TimerOn();
-
 	LCD_init();
 
-	const unsigned char* string = (unsigned char*)"CS120B is Legend... wait for it DARY!";
-	
-	const unsigned char* start = string;
+	LCD_DisplayString(1, "Hello World");
 
     /* Insert your solution below */
     while (1) {
-	LCD_ClearScreen();
-	for(unsigned char c = 1, i = 0; c < 17; c++, i++){
-		LCD_Cursor(c);
-		LCD_WriteData(string[i]);
-	}
-	string = (*string == 'a') ? start : string + 1;
-	while(!TimerFlag){}
-	TimerFlag = 0;
+	continue;
     }
     return 1;
 }
