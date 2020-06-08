@@ -1,13 +1,13 @@
 /*	Author: Patrick Dang
  *  	Partner(s) Name: 
  *	Lab Section: 028
- *	Assignment: Lab #11  Exercise #1
+ *	Assignment: Lab #11  Exercise #3
  *	Exercise Description: [optional - include for your own benefit]
  *
  *	I acknowledge all content contained herein, excluding template or example
  *	code, is my own original work.
  *
- *	Video Link: https://drive.google.com/open?id=1AKq4VL2i6e4xOfZNx2SmFI2akfk4UmGa
+ * 	Video Link: 
  */
 #include <avr/io.h>
 #include "io.h"
@@ -19,7 +19,7 @@
 #endif
 
 //Shared Variables
-unsigned char output = 'a';
+unsigned char output = ' ';
 //End Shared Variables
 
 enum keypad_States { keypad_WaitPress, keypad_WaitRelease };
@@ -27,7 +27,7 @@ enum keypad_States { keypad_WaitPress, keypad_WaitRelease };
 int keypadSMTick(int state){
 	//Local Variables
 	unsigned char key;
-	//unsigned char previousKey = 'a';
+	static unsigned char previousKey;
 
 	//Transitions
 	switch(state){
@@ -38,14 +38,14 @@ int keypadSMTick(int state){
 			}
 			else{
 				state = keypad_WaitRelease;
-				//output = key;
+				previousKey = key;
 			}
 			break;
 		case keypad_WaitRelease:
 			key = GetKeypadKey();
 			if(key == '\0'){
 				state = keypad_WaitPress;
-				//output = previousKey;
+				output = previousKey;
 			}
 			else{
 				state = keypad_WaitRelease;
@@ -68,30 +68,6 @@ int keypadSMTick(int state){
 	return state;
 }
 
-enum display_States { display_display };
-
-int displaySMTick(int state){
-	//Transitions
-	switch(state){
-		case display_display:
-			state = display_display;
-			break;
-		default:
-			break;
-	}
-
-	//State Actions
-	switch(state){
-		case display_display:
-			//LCD_ClearScreen();
-			//LCD_WriteData('a');
-			break;
-		default:
-			break;
-	}
-	return state;
-}
-
 int main(void) {
     	/* Insert DDR and PORT initializations */
 	DDRA = 0xFF; PORTA = 0x00;
@@ -102,8 +78,8 @@ int main(void) {
 	LCD_init();
 
 	//Declare an array of tasks
-	static task task1, task2;
-	task *tasks[] = { &task1, &task2 };
+	static task task1;
+	task *tasks[] = { &task1};
 	const unsigned short numTasks = sizeof(tasks) / sizeof(task*);
 
 	const char start = -1;
@@ -113,12 +89,6 @@ int main(void) {
 	task1.period = 10;
 	task1.elapsedTime = task1.period;
 	task1.TickFct = &keypadSMTick;
-
-	//Task 2 (displaySM)
-	task2.state = start;
-	task2.period = 10;
-	task2.elapsedTime = task2.period;
-	task2.TickFct = &displaySMTick;
 
 	unsigned short i; //for-loop iterator
 
@@ -135,7 +105,7 @@ int main(void) {
     	/* Insert your solution below */
       	while (1) {
 		LCD_ClearScreen();
-		LCD_WriteData('a');
+		LCD_WriteData(output);
 		for(i = 0; i < numTasks; i++){
 			if(tasks[i]->elapsedTime == tasks[i]->period){
 				tasks[i]->state = tasks[i]->TickFct(tasks[i]->state);

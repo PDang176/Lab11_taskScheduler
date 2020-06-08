@@ -1,13 +1,13 @@
 /*	Author: Patrick Dang
  *  	Partner(s) Name: 
  *	Lab Section: 028
- *	Assignment: Lab #11  Exercise #1
+ *	Assignment: Lab #11  Exercise #4
  *	Exercise Description: [optional - include for your own benefit]
  *
  *	I acknowledge all content contained herein, excluding template or example
  *	code, is my own original work.
  *
- *	Video Link: https://drive.google.com/open?id=1AKq4VL2i6e4xOfZNx2SmFI2akfk4UmGa
+ * 	Video Link: https://drive.google.com/open?id=1AnKCUTvif8rt886aho80fZy0G1yKB_Ap 
  */
 #include <avr/io.h>
 #include "io.h"
@@ -19,7 +19,8 @@
 #endif
 
 //Shared Variables
-unsigned char output = ' ';
+unsigned char output = '\0';
+unsigned char cursor = 1;
 //End Shared Variables
 
 enum keypad_States { keypad_WaitPress, keypad_WaitRelease };
@@ -68,6 +69,34 @@ int keypadSMTick(int state){
 	return state;
 }
 
+enum display_States { display_display };
+
+int displaySMTick(int state){
+	//Transitions
+	switch(state){
+		case display_display:
+			state = display_display;
+			break;
+		default:
+			state = display_display;
+			break;
+	}
+	
+	//State Actions
+	switch(state){
+		case display_display:
+			if(output != '\0'){
+				LCD_WriteData(output);
+				output = '\0';
+				cursor = (cursor < 16) ? cursor + 1 : 1;
+				LCD_Cursor(cursor);
+			}
+			break;
+		default:
+			break;
+	}
+}
+
 int main(void) {
     	/* Insert DDR and PORT initializations */
 	DDRA = 0xFF; PORTA = 0x00;
@@ -76,10 +105,13 @@ int main(void) {
 	DDRD = 0xFF; PORTD = 0x00;
 
 	LCD_init();
+	
+	LCD_DisplayString(1, "Congratulations!");
+	LCD_Cursor(1);
 
 	//Declare an array of tasks
-	static task task1;
-	task *tasks[] = { &task1};
+	static task task1, task2;
+	task *tasks[] = { &task1, &task2};
 	const unsigned short numTasks = sizeof(tasks) / sizeof(task*);
 
 	const char start = -1;
@@ -89,6 +121,12 @@ int main(void) {
 	task1.period = 10;
 	task1.elapsedTime = task1.period;
 	task1.TickFct = &keypadSMTick;
+
+	//Task 2 (displaySM)
+	task2.state = start;
+	task2.period = 10;
+	task2.elapsedTime = task2.period;
+	task2.TickFct = &displaySMTick;
 
 	unsigned short i; //for-loop iterator
 
@@ -104,8 +142,6 @@ int main(void) {
 
     	/* Insert your solution below */
       	while (1) {
-		LCD_ClearScreen();
-		LCD_WriteData(output);
 		for(i = 0; i < numTasks; i++){
 			if(tasks[i]->elapsedTime == tasks[i]->period){
 				tasks[i]->state = tasks[i]->TickFct(tasks[i]->state);
